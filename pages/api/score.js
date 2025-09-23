@@ -2,8 +2,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { url } = JSON.parse(req.body);
-    const hostname = new URL(url).hostname;
+   const body  = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+const url   = body?.url || '';
+if (!url)  throw new Error('missing url');
 
     // ----  FREE authority source (no key needed)  ----
     const resp = await fetch(`https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=${hostname}`);
