@@ -1,4 +1,3 @@
-// Force Node.js runtime so req.body works correctly on Vercel
 export const config = {
   runtime: "nodejs",
 };
@@ -12,7 +11,9 @@ export default async function handler(req, res) {
     const { url } = req.body;
     const hostname = new URL(url).hostname;
 
-    // ✅ Using your Vercel variable: OPENPAGERANK_KEY
+    // 🔎 Debug check: is the key being injected?
+    console.log("API Key present?", !!process.env.OPENPAGERANK_KEY);
+
     const resp = await fetch(
       `https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=${hostname}`,
       {
@@ -28,11 +29,16 @@ export default async function handler(req, res) {
     const authority = rank >= 0 ? Math.round(rank * 10) : 0;
 
     res.status(200).json({
-      e: 0,  // errors placeholder
-      x: 0,  // extra placeholder
-      a: authority,  // authority score
-      t: url.startsWith("https") ? 100 : 0,  // trust score
-      raw_rank: rank,  // actual pagerank from API
+      e: 0,
+      x: 0,
+      a: authority,
+      t: url.startsWith("https") ? 100 : 0,
+      raw_rank: rank,
+      // 👇 Temporary debug
+      debug: {
+        apiKeyPresent: !!process.env.OPENPAGERANK_KEY,
+        apiResponse: data,
+      },
     });
   } catch (e) {
     res.status(200).json({
