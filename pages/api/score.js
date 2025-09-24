@@ -19,6 +19,7 @@ export default async function handler(req, res) {
       {
         headers: {
           "ApiKey": process.env.OPENPAGERANK_KEY,
+          "Accept": "application/json"
         },
       }
     );
