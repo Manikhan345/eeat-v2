@@ -1,53 +1,73 @@
 export const config = {
-  runtime: "nodejs",
+  runtime: "nodejs"
 };
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     const { url } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ error: "Missing URL" });
+    }
+
+    // Extract domain
     const hostname = new URL(url).hostname;
 
-    // 🔎 Debug check: is the key being injected?
-    console.log("API Key present?", !!process.env.OPENPAGERANK_KEY);
+    // Debug: check if API key exists
+    const apiKey = process.env.OPENPAGERANK_KEY || null;
+    console.log("DEBUG - Env keys available:", Object.keys(process.env));
+    console.log("DEBUG - API Key present?", !!apiKey);
 
-    const resp = await fetch(
+    if (!apiKey) {
+      return res.status(500).json({
+        error: "API key missing",
+        debug: {
+          apiKeyPresent: false
+        }
+      });
+    }
+
+    // Call OpenPageRank API
+    const response = await fetch(
       `https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=${hostname}`,
       {
         headers: {
-          "ApiKey": process.env.OPENPAGERANK_KEY,
+          "ApiKey": apiKey,
           "Accept": "application/json"
-        },
+        }
       }
     );
 
-    const data = await resp.json();
+    const data = await response.json();
 
-    const rank = data?.response?.[0]?.page_rank_integer ?? -1;
-    const authority = rank >= 0 ? Math.round(rank * 10) : 0;
+    // Parse the result safely
+    const rank =
+      data?.response?.[0]?.rank || -1;
+
+    // Example scoring system
+    const authorityScore = rank > 0 ? rank * 10 : 0;
+    const trustScore = rank > 0 ? 100 : 0;
 
     res.status(200).json({
       e: 0,
       x: 0,
-      a: authority,
-      t: url.startsWith("https") ? 100 : 0,
+      a: authorityScore,
+      t: trustScore,
       raw_rank: rank,
-      // 👇 Temporary debug
       debug: {
-        apiKeyPresent: !!process.env.OPENPAGERANK_KEY,
-        apiResponse: data,
-      },
+        apiKeyPresent: true,
+        apiResponse: data
+      }
     });
-  } catch (e) {
-    res.status(200).json({
-      e: 0,
-      x: 0,
-      a: 0,
-      t: 0,
-      debug: e.message,
+  } catch (error) {
+    console.error("Handler error:", error);
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.message
     });
   }
 }
