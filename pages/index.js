@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 export default function Home() {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState("");
   const [score, setScore] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -9,10 +9,10 @@ export default function Home() {
     if (!url.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/score', {   // NEW route
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+      const res = await fetch("/api/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
       });
       const data = await res.json();
       setScore(data);
@@ -24,14 +24,34 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-xl">
-        <h1 className="text-2xl font-bold mb-4">EEAT v2</h1>
-        <input className="border w-full p-2 mb-4" placeholder="Paste URL" value={url} onChange={(e) => setUrl(e.target.value)} />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={analyze} disabled={loading}>
-          {loading ? 'Checking…' : 'Analyze'}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 font-sans">
+      {/* Title */}
+      <h1 className="text-4xl font-bold mb-8">EEAT v2</h1>
+
+      {/* Input + Button */}
+      <div className="flex w-full max-w-xl gap-2">
+        <input
+          className="flex-grow border border-gray-300 rounded px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Paste URL"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <button
+          className="bg-blue-600 text-white px-6 py-2 rounded text-lg hover:bg-blue-700 disabled:opacity-50"
+          onClick={analyze}
+          disabled={loading}
+        >
+          {loading ? "Checking…" : "Analyze"}
         </button>
-        {score && <pre className="mt-4 text-sm">{JSON.stringify(score, null, 2)}</pre>}
+      </div>
+
+      {/* Results */}
+      <div className="mt-8 w-full max-w-3xl">
+        {score && (
+          <pre className="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+            {JSON.stringify(score, null, 2)}
+          </pre>
+        )}
       </div>
     </div>
   );
