@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       `https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=${hostname}`,
       {
         headers: {
-          "ApiKey": apiKey,
+          "API-OPR": apiKey,
           "Accept": "application/json"
         }
       }
