@@ -1,11 +1,16 @@
 import * as cheerio from "cheerio";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Only POST allowed" });
-  }
+  // Support both GET and POST
+  let url;
 
-  const { url } = req.body;
+  if (req.method === "POST") {
+    url = req.body?.url;
+  } else if (req.method === "GET") {
+    url = req.query?.url;
+  } else {
+    return res.status(405).json({ error: "Only GET and POST allowed" });
+  }
 
   if (!url) {
     return res.status(400).json({ error: "Missing URL" });
@@ -14,12 +19,14 @@ export default async function handler(req, res) {
   try {
     // Fetch the page HTML
     const response = await fetch(url, {
-  headers: {
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-  },
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
     });
+
     if (!response.ok) {
       return res
         .status(response.status)
@@ -63,6 +70,8 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Server error", details: err.message });
+    return res
+      .status(500)
+      .json({ error: "Server error", details: err.message });
   }
 }
